@@ -154,6 +154,20 @@ function checkDataForSeo(env: EnvRecord, items: PreflightItem[]): void {
 }
 
 function checkOptionalFeatures(env: EnvRecord, items: PreflightItem[]): void {
+  if (get(env, "GOOGLE_SERVICE_ACCOUNT_KEY")) {
+    items.push({
+      key: "gsc",
+      name: "Search Console",
+      level: "ok",
+      message: "Configured (service account)",
+    });
+  } else {
+    checkGoogleOAuthClient(env, items);
+  }
+  checkAiAndRendering(env, items);
+}
+
+function checkGoogleOAuthClient(env: EnvRecord, items: PreflightItem[]): void {
   const clientId = get(env, "GOOGLE_CLIENT_ID");
   const clientSecret = get(env, "GOOGLE_CLIENT_SECRET");
   const betterAuthSecret = get(env, "BETTER_AUTH_SECRET");
@@ -194,7 +208,9 @@ function checkOptionalFeatures(env: EnvRecord, items: PreflightItem[]): void {
         "Not configured (optional). See docs/SELF_HOSTING_GOOGLE_SEARCH_CONSOLE.md.",
     });
   }
+}
 
+function checkAiAndRendering(env: EnvRecord, items: PreflightItem[]): void {
   items.push(
     get(env, "OPENROUTER_API_KEY")
       ? {

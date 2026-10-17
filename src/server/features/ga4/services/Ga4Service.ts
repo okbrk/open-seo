@@ -3,6 +3,10 @@ import { db } from "@/db";
 import { account } from "@/db/schema";
 import { AppError } from "@/server/lib/errors";
 import { createGa4AdminClient } from "@/server/lib/ga4Client";
+import {
+  isRemovableGrant,
+  withServiceAccountGrant,
+} from "@/server/features/google/serviceAccount";
 import { Ga4AdminApiError, Ga4TokenError } from "@/server/lib/ga4Errors";
 import { GA4_OAUTH_PROVIDER_ID } from "@/shared/ga4";
 import {
@@ -15,7 +19,7 @@ async function getConnection(projectId: string): Promise<Ga4Connection | null> {
 }
 
 async function listGrantsForUser(userId: string) {
-  return db
+  const grants = await db
     .select({ id: account.id, accountId: account.accountId })
     .from(account)
     .where(
@@ -24,6 +28,7 @@ async function listGrantsForUser(userId: string) {
         eq(account.providerId, GA4_OAUTH_PROVIDER_ID),
       ),
     );
+  return withServiceAccountGrant(grants);
 }
 
 async function userHasGrant(userId: string): Promise<boolean> {
@@ -57,6 +62,7 @@ async function listPropertiesForUserWithGrantStatus(userId: string) {
         return {
           accountId: grant.accountId,
           email,
+          removable: isRemovableGrant(grant.accountId),
           requiresReconnect: false,
           propertiesUnavailable: false,
           properties,
@@ -73,6 +79,7 @@ async function listPropertiesForUserWithGrantStatus(userId: string) {
         return {
           accountId: grant.accountId,
           email: null,
+          removable: isRemovableGrant(grant.accountId),
           requiresReconnect: reconnect,
           propertiesUnavailable: !reconnect,
           properties: [],

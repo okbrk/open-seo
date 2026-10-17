@@ -7,3 +7,5 @@
 export const GOOGLE_LINK_ERROR_PARAM = "google_link_error";
 
 export type GoogleLinkProvider = "gsc" | "ga4";
+
+export const SERVICE_ACCOUNT_GRANT_ID = "service-account";

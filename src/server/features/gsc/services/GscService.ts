@@ -2,6 +2,10 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { account } from "@/db/schema";
 import { GSC_OAUTH_PROVIDER_ID } from "@/shared/gsc";
+import {
+  isRemovableGrant,
+  withServiceAccountGrant,
+} from "@/server/features/google/serviceAccount";
 import { AppError } from "@/server/lib/errors";
 import {
   createGscClient,
@@ -55,21 +59,12 @@ async function getConnection(projectId: string): Promise<GscConnection | null> {
 /** Whether this user has linked a google-search-console grant (regardless of
  *  whether they've picked a property yet). Drives the connect-vs-pick UI. */
 async function userHasGrant(userId: string): Promise<boolean> {
-  const rows = await db
-    .select({ id: account.id })
-    .from(account)
-    .where(
-      and(
-        eq(account.userId, userId),
-        eq(account.providerId, GSC_OAUTH_PROVIDER_ID),
-      ),
-    )
-    .limit(1);
-  return rows.length > 0;
+  const grants = await listGrantsForUser(userId);
+  return grants.length > 0;
 }
 
 async function listGrantsForUser(userId: string) {
-  return db
+  const grants = await db
     .select({ id: account.id, accountId: account.accountId })
     .from(account)
     .where(
@@ -78,6 +73,7 @@ async function listGrantsForUser(userId: string) {
         eq(account.providerId, GSC_OAUTH_PROVIDER_ID),
       ),
     );
+  return withServiceAccountGrant(grants);
 }
 
 /** Expected ways a stored grant fails to reach Search Console: no token could be
@@ -113,6 +109,7 @@ async function listSitesForUserWithGrantStatus(
         return {
           accountId: grant.accountId,
           email,
+          removable: isRemovableGrant(grant.accountId),
           requiresReconnect: false,
           propertiesUnavailable: false,
           apiDisabled: false,
@@ -133,6 +130,7 @@ async function listSitesForUserWithGrantStatus(
         return {
           accountId: grant.accountId,
           email: null,
+          removable: isRemovableGrant(grant.accountId),
           requiresReconnect,
           propertiesUnavailable: !requiresReconnect,
           apiDisabled,
