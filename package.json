@@ -14,7 +14,7 @@
     "lint:fix": "oxlint . --type-aware --fix",
     "preview": "npm run build && vite preview --port 3001",
     "deploy": "npm run db:migrate:prod && npm run build && wrangler deploy -c dist/open_seo_audit/wrangler.json && wrangler deploy",
-    "deploy:selfhost": "node scripts/selfhost-deploy-preflight.mjs && vite build --mode selfhost && tsc --noEmit && pnpm alchemy deploy deploy/alchemy/alchemy.run.ts --env-file .env.selfhost --stage selfhost",
+    "deploy:selfhost": "node scripts/selfhost-deploy-preflight.mjs && vite build --mode selfhost && tsc --noEmit && pnpm alchemy deploy deploy/alchemy/alchemy.run.ts --env-file .env.selfhost --stage selfhost --yes",
     "deploy:postgres": "npm run db:migrate:pg && npm run build && pnpm alchemy deploy deploy/alchemy/alchemy.run.ts --env-file .env.production --stage hosted-prod --adopt",
     "deploy:preview": "vite build --mode preview && pnpm alchemy deploy deploy/alchemy/alchemy.run.ts --env-file .env.preview",
     "preview:access": "pnpm alchemy deploy deploy/alchemy/alchemy.preview-access.run.ts --env-file .env.preview --stage preview-access --adopt",
