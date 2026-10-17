@@ -3,6 +3,7 @@ import {
   hasNoGscWebsites,
   EmptyAccountMessage,
 } from "./GscPropertySetupHelp";
+import { GoogleAccountHeader } from "@/client/features/integrations/GoogleAccountHeader";
 import { GoogleAccountRemovalDialog } from "@/client/features/integrations/GoogleAccountRemovalDialog";
 import { QueryError } from "@/client/components/QueryState";
 import { Spinner } from "@/client/components/Spinner";
@@ -28,6 +29,7 @@ type Property = {
 export type GooglePickerAccount = {
   accountId: string;
   email: string | null;
+  removable?: boolean;
   requiresReconnect: boolean;
   unavailable?: boolean;
   apiDisabled?: boolean;
@@ -217,21 +219,15 @@ export function GooglePropertyPicker({
                         role="group"
                         aria-label={accountLabel(account)}
                       >
-                        <div className="flex items-center justify-between gap-2 px-2 py-2 text-xs font-medium text-muted-foreground">
-                          <span className="min-w-0 break-all">
-                            {accountLabel(account)}
-                          </span>
-                          <Button
-                            variant="ghost"
-                            size="xs"
-                            className="shrink-0 text-destructive"
-                            disabled={saving}
-                            onClick={() => setRemoving(account)}
-                            aria-label={`Remove ${accountLabel(account)}`}
-                          >
-                            Remove account
-                          </Button>
-                        </div>
+                        <GoogleAccountHeader
+                          label={accountLabel(account)}
+                          disabled={saving}
+                          onRemove={
+                            account.removable === false
+                              ? undefined
+                              : () => setRemoving(account)
+                          }
+                        />
                         {account.requiresReconnect ? (
                           <div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-2 text-sm">
                             <span className="text-muted-foreground">

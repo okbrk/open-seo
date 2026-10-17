@@ -163,6 +163,7 @@ describe("GscService.listSitesForUserWithGrantStatus", () => {
         accounts: [
           {
             accountId: "sub-a",
+            removable: true,
             email: "sub-a@example.com",
             requiresReconnect: false,
             propertiesUnavailable: false,
@@ -171,6 +172,7 @@ describe("GscService.listSitesForUserWithGrantStatus", () => {
           },
           {
             accountId: "sub-b",
+            removable: true,
             email: null,
             requiresReconnect: true,
             propertiesUnavailable: false,
@@ -199,6 +201,7 @@ describe("GscService.listSitesForUserWithGrantStatus", () => {
       accounts: [
         {
           accountId: "sub-a",
+          removable: true,
           email: null,
           requiresReconnect: false,
           propertiesUnavailable: false,
@@ -239,6 +242,7 @@ describe("GscService.listSitesForUserWithGrantStatus", () => {
         accounts: [
           {
             accountId: "sub-a",
+            removable: true,
             email: "sub-a@example.com",
             requiresReconnect: false,
             propertiesUnavailable: false,
@@ -247,6 +251,7 @@ describe("GscService.listSitesForUserWithGrantStatus", () => {
           },
           {
             accountId: "sub-b",
+            removable: true,
             email: null,
             requiresReconnect: false,
             propertiesUnavailable: true,

@@ -16,6 +16,7 @@ import {
 import {
   GOOGLE_LINK_ERROR_PARAM,
   type GoogleLinkProvider,
+  SERVICE_ACCOUNT_GRANT_ID,
 } from "@/shared/google-link";
 import {
   GSC_DATA_SCOPE,
@@ -27,6 +28,7 @@ import {
   hasGoogleOAuthConfig,
 } from "./oauth-config";
 import { getGoogleAccountId } from "./googleIdToken";
+import { getServiceAccountAccessToken } from "./serviceAccount";
 import {
   consumeState,
   createState,
@@ -338,6 +340,9 @@ export async function getGoogleAccessToken(input: {
   providerId: string;
   accountId?: string;
 }): Promise<string> {
+  if (input.accountId === SERVICE_ACCOUNT_GRANT_ID) {
+    return getServiceAccountAccessToken(input.providerId);
+  }
   const [grant] = await db
     .select({
       id: account.id,

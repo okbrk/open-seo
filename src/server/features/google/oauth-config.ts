@@ -1,5 +1,6 @@
 import { getOptionalEnvValue } from "@/server/lib/runtime-env";
 import { MIN_BETTER_AUTH_SECRET_LENGTH } from "@/shared/selfhost-checks";
+import { getServiceAccountKey } from "./serviceAccount";
 
 type GoogleOAuthClientConfig = {
   clientId: string;
@@ -19,6 +20,7 @@ export async function getGoogleOAuthClientConfig(): Promise<GoogleOAuthClientCon
 export async function hasGoogleOAuthConfig(
   config?: GoogleOAuthClientConfig | null,
 ): Promise<boolean> {
+  if (config === undefined && (await getServiceAccountKey())) return true;
   const oauthConfig =
     config === undefined ? await getGoogleOAuthClientConfig() : config;
   if (!oauthConfig) return false;

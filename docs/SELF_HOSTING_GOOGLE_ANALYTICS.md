@@ -3,6 +3,10 @@
 Connecting Google Analytics lets OpenSEO bind a GA4 property to a project. The
 connection is optional and read-only.
 
+> Running OpenSEO for a team or for clients? A
+> [service account](SELF_HOSTING_GOOGLE_SERVICE_ACCOUNT.md) connects without
+> anyone's personal Google login, and never needs reconnecting.
+
 ## What you'll need
 
 - A Google account with access to the GA4 property.

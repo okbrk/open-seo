@@ -5,6 +5,10 @@ impressions, positions, and URL inspection data, straight from Google.
 
 It's **optional**: OpenSEO runs fine without it, just without Search Console data.
 
+> Running OpenSEO for a team or for clients? A
+> [service account](SELF_HOSTING_GOOGLE_SERVICE_ACCOUNT.md) connects without
+> anyone's personal Google login, and never needs reconnecting.
+
 ## What you'll need
 
 - A Google account with access to your verified Search Console property.

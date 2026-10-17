@@ -55,4 +55,17 @@ describe("runSelfhostPreflight", () => {
     expect(itemFor(result, "Search Console")?.level).toBe("warn");
     expect(itemFor(result, "Search Console")?.message).toContain("32");
   });
+
+  it("reports Search Console configured from a service account key alone", () => {
+    const result = runSelfhostPreflight({
+      AUTH_MODE: "local_noauth",
+      GOOGLE_SERVICE_ACCOUNT_KEY: "{}",
+    });
+
+    expect(itemFor(result, "Search Console")?.level).toBe("ok");
+    expect(itemFor(result, "Search Console")?.message).toContain(
+      "service account",
+    );
+    expect(itemFor(result, "AI features")).toBeDefined();
+  });
 });
