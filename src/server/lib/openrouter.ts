@@ -4,6 +4,8 @@ import {
   type OpenRouterProvider,
 } from "@openrouter/ai-sdk-provider";
 import { wrapLanguageModel } from "ai";
+import { z } from "zod";
+import { getOptionalEnvValue } from "@/server/lib/runtime-env";
 
 // OpenRouter model slug used for the SAM in-app chat agent. Override with
 // OPENROUTER_MODEL to swap models without a code change.
@@ -60,12 +62,20 @@ async function openAiBlockedHere(): Promise<boolean> {
  * so the SAM agent reads the key/model from its DO env and builds here.
  */
 export function buildChatAgentModel(
-  apiKey: string,
-  modelId?: string,
+  readEnv: (name: ChatAgentEnvVar) => string | undefined,
   reasoningEffort: "max" | "low" = "max",
 ): LanguageModelV3 {
-  const model = modelId ?? DEFAULT_CHAT_AGENT_MODEL;
-  const openrouter = createOpenRouter({ apiKey });
+  const apiKey = readEnv("OPENROUTER_API_KEY");
+  if (!apiKey) {
+    throw new Error(
+      "Missing required environment variable: OPENROUTER_API_KEY",
+    );
+  }
+  const model = readEnv("OPENROUTER_MODEL") ?? DEFAULT_CHAT_AGENT_MODEL;
+  const openrouter = createOpenRouter({
+    apiKey,
+    ...gatewaySettings(readEnv),
+  });
   const primary = openRouterModel(openrouter, model, reasoningEffort);
   if (!model.startsWith("openai/")) return primary;
   // Where OpenRouter would reject OpenAI, pick MiniMax M3 before the request.
@@ -80,6 +90,71 @@ export function buildChatAgentModel(
       wrapStream: async ({ params }) => (await pick()).doStream(params),
     },
   });
+}
+
+export async function loadChatAgentModel(
+  reasoningEffort: "max" | "low",
+): Promise<LanguageModelV3> {
+  const values = new Map(
+    await Promise.all(
+      CHAT_AGENT_ENV_VARS.map(
+        async (name) => [name, await getOptionalEnvValue(name)] as const,
+      ),
+    ),
+  );
+  return buildChatAgentModel((name) => values.get(name), reasoningEffort);
+}
+
+const CHAT_AGENT_ENV_VARS = [
+  "OPENROUTER_API_KEY",
+  "OPENROUTER_MODEL",
+  "OPENROUTER_BASE_URL",
+  "OPENROUTER_HEADERS",
+] as const;
+
+type ChatAgentEnvVar = (typeof CHAT_AGENT_ENV_VARS)[number];
+
+const gatewayHeadersSchema = z.record(z.string(), z.string());
+
+function gatewaySettings(
+  readEnv: (name: ChatAgentEnvVar) => string | undefined,
+) {
+  const baseURL = readEnv("OPENROUTER_BASE_URL");
+  if (!baseURL) return {};
+  const headers = readEnv("OPENROUTER_HEADERS");
+  return {
+    baseURL,
+    headers: headers ? gatewayHeadersSchema.parse(JSON.parse(headers)) : {},
+    fetch: fetchFromOpenAiCompatibleGateway,
+  };
+}
+
+async function fetchFromOpenAiCompatibleGateway(
+  input: RequestInfo | URL,
+  init?: RequestInit,
+): Promise<Response> {
+  const response = await fetch(input, init);
+  if (!response.headers.get("content-type")?.includes("application/json")) {
+    return response;
+  }
+  const body: unknown = JSON.parse(await response.text(), dropNullFields);
+  return Response.json(withZeroCostWhenUnreported(body), {
+    status: response.status,
+    statusText: response.statusText,
+  });
+}
+
+function dropNullFields(_key: string, value: unknown): unknown {
+  return value === null ? undefined : value;
+}
+
+const completionUsageSchema = z.looseObject({
+  usage: z.looseObject({ cost: z.number().default(0) }),
+});
+
+function withZeroCostWhenUnreported(body: unknown): unknown {
+  const parsed = completionUsageSchema.safeParse(body);
+  return parsed.success ? parsed.data : body;
 }
 
 function openRouterModel(
