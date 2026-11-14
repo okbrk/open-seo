@@ -76,6 +76,10 @@ pnpm install
 pnpm deploy:selfhost --yes
 ```
 
+## Using your own domain
+
+Set `SELFHOST_DOMAIN` in `.env.selfhost` to a hostname in a zone on the same Cloudflare account, for example `seo.example.com`, and redeploy. The deploy attaches it to the Worker as a custom domain and adds it to the Access application, so both it and the workers.dev URL require sign-in. The deploy token needs `Workers Routes Write` on that zone.
+
 ## Giving teammates access
 
 Add the teammate to `ACCESS_ALLOWED_EMAILS` in `.env.selfhost` and redeploy. Dashboard edits to that Access policy are overwritten on the next deploy. (If you manage the Access application yourself, edit its Allow policy in Zero Trust instead.)

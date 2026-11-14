@@ -63,7 +63,7 @@ export const emailAccessGate = (options: {
   applicationId: string;
   policyName: string;
   applicationName: string;
-  domain: string;
+  hostnames: [string, ...string[]];
   emails: string[];
 }) =>
   Effect.gen(function* () {
@@ -75,7 +75,15 @@ export const emailAccessGate = (options: {
     return yield* Cloudflare.Access.Application(options.applicationId, {
       type: "self_hosted",
       name: options.applicationName,
-      domain: options.domain,
+      domain: options.hostnames[0],
+      ...(options.hostnames.length > 1
+        ? {
+            destinations: options.hostnames.map((uri) => ({
+              type: "public" as const,
+              uri,
+            })),
+          }
+        : {}),
       policies: [allow.policyId],
     });
   });

@@ -36,7 +36,7 @@ export default Alchemy.Stack(
       applicationId: "PreviewAccess",
       policyName: "open-seo preview team",
       applicationName: "open-seo preview environments",
-      domain: hostname,
+      hostnames: [hostname],
       emails: allowedEmails,
     });
 
